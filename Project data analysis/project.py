@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from bs4 import BeautifulSoup
 import requests
-
+from scipy.stats import zscore, norm
 
 # Function to scrape Wikipedia table and calculate statistical measures
 def scrape_wikipedia_table(url):
@@ -46,7 +46,32 @@ def scrape_wikipedia_table(url):
 
 #         st.write(df[column].describe().round(2))
         
-                
+
+
+def perform_z_test(data, column1, column2):
+    try:
+        z_stat, p_value = zscore(data[column1]), zscore(data[column2])
+        z_test_result = norm.sf(abs(z_stat)) * 2  # two-tailed test
+        return z_stat, p_value, z_test_result
+    except Exception as e:
+        st.error(f"Error performing Z test: {str(e)}")
+        return None, None, None
+
+def display_z_test_results(z_stat, p_value, z_test_result, significance_level=0.05):
+    st.subheader("Z Test Results")
+
+    st.write(f"P-Value Summary: Min = {p_value.min():.10f}, Max = {p_value.max():.10f}")
+    st.write(f"Z Statistic Summary: Min = {z_stat.min():.10f}, Max = {z_stat.max():.10f}")
+
+    if p_value.min() < significance_level:
+        st.success("Result: There is a significant difference between the means of the selected columns.")
+    else:
+        st.warning("Result: There is no significant difference between the means of the selected columns.")
+
+    st.write("Individual Results:")
+    for i, (p_val, z_stat_val) in enumerate(zip(p_value, z_stat)):
+        st.write(f"Pair {i + 1}: P-Value = {p_val:.10f}, Z Statistic = {z_stat_val:.10f}")
+
 # Interface Streamlit
 def main():
 
@@ -66,7 +91,7 @@ def main():
         uploaded_file = st.file_uploader(f"Téléchargez un fichier {file_type}", type=[file_type.lower()])
 
         # Charger les données du fichier si disponible
-        if uploaded_file is not None:
+        if uploaded_file is not None and uploaded_file:
             try:
                 if file_type == 'CSV':
                     data = pd.read_csv(uploaded_file)
@@ -79,6 +104,7 @@ def main():
 
             except Exception as e:
                 st.error(f"Erreur lors du chargement du fichier : {e}")
+
 
     elif data_source == 'Lien':
         # Saisie du lien vers les données
@@ -256,6 +282,15 @@ def process_data(data):
              st.error(f"Erreur lors de l'affichage du graphique : {str(e)}")
              if "zero-size array to reduction operation fmin which has no identity" in str(e):
                  st.write("Erreur : La matrice de corrélation est de taille zéro. Veuillez vérifier vos données.")
+    # Interface for Z test
+    st.subheader("Z Test (Statistical Hypothesis Testing)")
+
+    selected_column1 = st.selectbox("Select the first column for Z test:", data.columns)
+    selected_column2 = st.selectbox("Select the second column for Z test:", data.columns)
+
+    if st.button("Perform Z Test"):
+        z_stat, p_value, z_test_result = perform_z_test(data, selected_column1, selected_column2)
+        display_z_test_results(z_stat, p_value, z_test_result)
 
 if __name__ == '__main__':
     main()
