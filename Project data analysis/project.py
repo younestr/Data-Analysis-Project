@@ -7,6 +7,7 @@ from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 import seaborn as sns
 from bs4 import BeautifulSoup
+from textblob import TextBlob 
 import requests
 from scipy.stats import zscore, norm
 from scipy.stats import ttest_ind
@@ -378,6 +379,37 @@ def scrape_wikipedia_table(url):
 
 #         st.write(df[column].describe().round(2))
 
+# Function to perform sentiment analysis and add a "Feedback" column
+def perform_fine_grained_sentiment_analysis(data, text_column):
+    try:
+        # Apply sentiment analysis using TextBlob with fine-grained categories
+        data['Sentiment_Polarity'] = data[text_column].apply(lambda x: TextBlob(str(x)).sentiment.polarity)
+
+        # Define thresholds for sentiment categories
+        threshold_very_negative = -np.inf
+        threshold_negative = -0.3
+        threshold_mildly_negative = -0.1
+        threshold_mildly_positive = 0.1
+        threshold_positive = 0.3
+        threshold_very_positive = np.inf
+
+        # Categorize sentiments based on thresholds
+        bins = [threshold_very_negative, threshold_negative, threshold_mildly_negative, threshold_mildly_positive, threshold_positive, threshold_very_positive]
+        labels = ['Very Negative', 'Negative', 'Mildly Negative', 'Mildly Positive', 'Positive']
+
+        # Calculate sentiment category
+        data['Feedback'] = pd.cut(data['Sentiment_Polarity'], bins=bins, labels=labels, include_lowest=True)
+
+        # Drop the temporary column used for calculation
+        data = data.drop('Sentiment_Polarity', axis=1)
+
+        return data
+    except Exception as e:
+        st.error(f"Error performing sentiment analysis: {str(e)}")
+        return None
+
+
+
 def perform_linear_regression(data, x_column, y_column):
     try:
         # Extract the selected columns
@@ -522,7 +554,10 @@ def main():
                 if file_type == 'CSV':
                     data = pd.read_csv(uploaded_file)
                 elif file_type == 'XLSX':
-                    data = pd.read_excel(uploaded_file, engine='openpyxl')
+                    # Sélection de la feuille
+                    sheet_selector = st.selectbox("Choisir la feuille", pd.ExcelFile(uploaded_file).sheet_names)  
+                    print(sheet_selector)
+                    data = pd.read_excel(uploaded_file, sheet_name=sheet_selector)
                 elif file_type == 'TXT':
                     data = pd.read_csv(uploaded_file, sep='\t')  # Exemple avec séparateur tabulation, ajustez en fonction de votre format
 
@@ -702,6 +737,18 @@ def process_data(data):
     if st.button("Perform Linear Regression"):
         slope_lr, intercept_lr = perform_linear_regression(data, selected_x_column_lr, selected_y_column_lr)
         display_linear_regression_results(data, slope_lr, intercept_lr, selected_x_column_lr, selected_y_column_lr)
+    # Interface for sentiment analysis
+    st.subheader("Sentiment Analysis")
+
+    # Select the column containing text data for sentiment analysis
+    text_column_for_sentiment = st.selectbox("Select the column for sentiment analysis:", data.select_dtypes(include='object').columns)
+
+    # Button to perform fine-grained sentiment analysis and add a new "Feedback" column
+    if st.button("Perform Fine-Grained Sentiment Analysis"):
+        data = perform_fine_grained_sentiment_analysis(data, text_column_for_sentiment)
+        st.write("Data with Fine-Grained Sentiment Analysis:")
+        st.write(data)
+
 
 if __name__ == '__main__':
     main()
