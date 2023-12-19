@@ -3,11 +3,14 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 import seaborn as sns
 from bs4 import BeautifulSoup
 import requests
 from scipy.stats import zscore, norm
+from scipy.stats import ttest_ind
+from scipy.stats import chi2_contingency
 import numpy as np
 from scipy.stats import gaussian_kde
 
@@ -374,7 +377,101 @@ def scrape_wikipedia_table(url):
 #         print(f"DataFrame content for column {column}:\n", df[column])
 
 #         st.write(df[column].describe().round(2))
-        
+
+def perform_linear_regression(data, x_column, y_column):
+    try:
+        # Extract the selected columns
+        x = data[[x_column]]
+        y = data[y_column]
+
+        # Create and fit the linear regression model
+        model = LinearRegression()
+        model.fit(x, y)
+
+        # Get the coefficients and intercept
+        slope = model.coef_[0]
+        intercept = model.intercept_
+
+        return slope, intercept
+    except Exception as e:
+        st.error(f"Error performing Linear Regression: {str(e)}")
+        return None, None
+
+def display_linear_regression_results(data, slope, intercept, x_column, y_column):
+    st.subheader("Linear Regression Results")
+
+    st.write(f"Slope (Coefficient): {slope:.6f}")
+    st.write(f"Intercept: {intercept:.6f}")
+
+    # Display the linear regression equation
+    st.write("Linear Regression Equation:")
+    st.latex(f"Y = {slope:.6f}X + {intercept:.6f}")
+
+    # Create a scatter plot with the regression line
+    fig = go.Figure()
+
+    # Scatter plot for the original data points
+    fig.add_trace(go.Scatter(x=data[x_column], y=data[y_column], mode='markers', name='Data Points'))
+
+    # Regression line
+    x_range = np.linspace(data[x_column].min(), data[x_column].max(), 100)
+    y_range = slope * x_range + intercept
+    fig.add_trace(go.Scatter(x=x_range, y=y_range, mode='lines', line=dict(color='red'), name='Regression Line'))
+
+    # Customize layout
+    fig.update_layout(
+        title="Linear Regression",
+        xaxis_title=x_column,
+        yaxis_title=y_column,
+    )
+
+    # Show the plot
+    st.plotly_chart(fig)
+
+
+
+
+def perform_chi2_test(data, column1, column2):
+    try:
+        # Perform Chi-square test
+        contingency_table = pd.crosstab(data[column1], data[column2])
+        chi2_stat, p_value, _, _ = chi2_contingency(contingency_table)
+        return chi2_stat, p_value
+    except Exception as e:
+        st.error(f"Error performing Chi-square test: {str(e)}")
+        return None, None
+
+def display_chi2_test_results(chi2_stat, p_value, significance_level=0.05):
+    st.subheader("Chi-square Test Results")
+
+    st.write(f"P-Value: {p_value:.10f}")
+    st.write(f"Chi-square Statistic: {chi2_stat:.10f}")
+
+    if p_value < significance_level:
+        st.success("Result: There is a significant association between the selected columns.")
+    else:
+        st.warning("Result: There is no significant association between the selected columns.")
+
+
+def perform_t_test(data, column1, column2):
+    try:
+        t_stat, p_value = ttest_ind(data[column1], data[column2])
+        return t_stat, p_value
+    except Exception as e:
+        st.error(f"Error performing t-test: {str(e)}")
+        return None, None
+
+
+def display_t_test_results(t_stat, p_value, significance_level=0.05):
+    st.subheader("T-Test Results")
+
+    st.write(f"P-Value: {p_value:.10f}")
+    st.write(f"T Statistic: {t_stat:.10f}")
+
+    if p_value < significance_level:
+        st.success("Result: There is a significant difference between the means of the selected columns.")
+    else:
+        st.warning("Result: There is no significant difference between the means of the selected columns.")
 
 
 def perform_z_test(data, column1, column2):
@@ -578,6 +675,33 @@ def process_data(data):
     if st.button("Perform Z Test"):
         z_stat, p_value, z_test_result = perform_z_test(data, selected_column1, selected_column2)
         display_z_test_results(z_stat, p_value, z_test_result)
+    # Interface for T test
+    st.subheader("T Test (Statistical Hypothesis Testing)")
+
+    selected_column1_t = st.selectbox("Select the first column for T test:", data.columns)
+    selected_column2_t = st.selectbox("Select the second column for T test:", data.columns)
+
+    if st.button("Perform T Test"):
+        t_stat, p_value = perform_t_test(data, selected_column1_t, selected_column2_t)
+        display_t_test_results(t_stat, p_value)
+    # Interface for Chi-square test
+    st.subheader("Chi-square Test (Statistical Hypothesis Testing)")
+
+    selected_column1_chi2 = st.selectbox("Select the first column for Chi-square test:", data.columns)
+    selected_column2_chi2 = st.selectbox("Select the second column for Chi-square test:", data.columns)
+
+    if st.button("Perform Chi-square Test"):
+        chi2_stat, p_value_chi2 = perform_chi2_test(data, selected_column1_chi2, selected_column2_chi2)
+        display_chi2_test_results(chi2_stat, p_value_chi2)
+    # Interface for Linear Regression
+    st.subheader("Linear Regression")
+
+    selected_x_column_lr = st.selectbox("Select the independent variable (X) for Linear Regression:", data.columns)
+    selected_y_column_lr = st.selectbox("Select the dependent variable (Y) for Linear Regression:", data.columns)
+
+    if st.button("Perform Linear Regression"):
+        slope_lr, intercept_lr = perform_linear_regression(data, selected_x_column_lr, selected_y_column_lr)
+        display_linear_regression_results(data, slope_lr, intercept_lr, selected_x_column_lr, selected_y_column_lr)
 
 if __name__ == '__main__':
     main()
