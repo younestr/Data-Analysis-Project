@@ -6,7 +6,7 @@ To run this Streamlit Data Analysis project, follow these steps:
 git clone https://github.com/your-username/your-repository.git
 cd your-repository
 ```
-Replace "your-username" and "your-repository" with your [GitHub](https://github.com/) username and the name of your repository.
+Replace **"your-username"** and **"your-repository"** with your [GitHub](https://github.com/) username and the name of your repository.
 
 # 2. Set Up a Virtual Environment (Optional but Recommended)
 ```bash
@@ -26,7 +26,7 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 # 3. Install Required Libraries
-Install the necessary Python libraries using pip:
+Install the necessary Python libraries using [pip](https://pip.pypa.io/en/stable/):
 
 ```bash
 pip install -r requirements.txt
@@ -53,7 +53,7 @@ Now that the dependencies are installed, you can run the Streamlit application. 
 streamlit run app.py
 
 ```
-Replace "app.py" with the name of your Streamlit application file.
+Replace **"app.py"** with the name of your Streamlit application file.
 
 This will start a local development server, and you can access the application in your web browser at [localhost](http://localhost:8501).
 
