@@ -31,7 +31,7 @@ Install the necessary Python libraries using [pip](https://pip.pypa.io/en/stable
 ```bash
 pip install -r requirements.txt
 ```
-The "requirements.txt" file should contain the following:
+The **"requirements.txt"** file should contain the following:
 
 ```bash
 streamlit
