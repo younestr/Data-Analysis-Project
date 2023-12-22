@@ -11,6 +11,7 @@ from textblob import TextBlob
 import requests
 from scipy.stats import zscore, norm
 from scipy.stats import ttest_ind
+from scipy.stats import f_oneway
 from scipy.stats import chi2_contingency
 import numpy as np
 from scipy.stats import gaussian_kde
@@ -378,6 +379,28 @@ def scrape_wikipedia_table(url):
 #         print(f"DataFrame content for column {column}:\n", df[column])
 
 #         st.write(df[column].describe().round(2))
+
+
+def perform_anova_test(data, column_group, column_values):
+    try:
+        groups = [data[data[column_group] == group][column_values] for group in data[column_group].unique()]
+        f_stat, p_value = f_oneway(*groups)
+        return f_stat, p_value
+    except Exception as e:
+        st.error(f"Error performing ANOVA test: {str(e)}")
+        return None, None
+
+def display_anova_test_results(f_stat, p_value, significance_level=0.05):
+    st.subheader("ANOVA Test Results")
+
+    st.write(f"P-Value: {p_value:.10f}")
+    st.write(f"F Statistic: {f_stat:.10f}")
+
+    if p_value < significance_level:
+        st.success("Result: There is a significant difference between the means of the groups.")
+    else:
+        st.warning("Result: There is no significant difference between the means of the groups.")
+
 
 # Function to perform sentiment analysis and add a "Feedback" column
 def perform_fine_grained_sentiment_analysis(data, text_column):
@@ -749,6 +772,14 @@ def process_data(data):
         st.write("Data with Fine-Grained Sentiment Analysis:")
         st.write(data)
 
+    # Interface for ANOVA test
+    st.subheader("ANOVA Test (Analysis of Variance)")
 
+    selected_group_column = st.selectbox("Select the column for grouping:", data.columns)
+    selected_values_column_anova = st.selectbox("Select the column for ANOVA test:", data.columns)
+
+    if st.button("Perform ANOVA Test"):
+        f_stat_anova, p_value_anova = perform_anova_test(data, selected_group_column, selected_values_column_anova)
+        display_anova_test_results(f_stat_anova, p_value_anova)
 if __name__ == '__main__':
     main()
