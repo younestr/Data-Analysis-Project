@@ -651,6 +651,8 @@ def main():
                 st.error(f"Erreur lors de la lecture des données depuis le lien : {e}")
 
 def process_data(data):
+
+    st.sidebar.title("Mesures Statistiques")
     # Sélection des colonnes et lignes
     selected_columns = st.sidebar.multiselect("Sélectionnez les colonnes :", data.columns)
     selected_rows = st.sidebar.multiselect("Sélectionnez les lignes :", data.index)
@@ -685,6 +687,7 @@ def process_data(data):
             st.write(result)
 
     # Sélection du type de graphique
+    st.sidebar.title("Visualisation")
     selected_chart_type = st.sidebar.selectbox("Sélectionnez le type de graphique :", ['nuage des points', 'droite de reg', 'bar', 'histogram', 'heatmap', 'courbe'])
 
     # Saisie des colonnes pour le graphique choisi
@@ -739,7 +742,7 @@ def process_data(data):
     # Interface for Z test
     st.markdown("<p class='subheader'>Z Test (Statistical Hypothesis Testing).</p>", unsafe_allow_html=True)
  
-
+    st.sidebar.title("Z Test")
     selected_column1 = st.sidebar.selectbox("Select the first column for Z test:", data.columns)
     selected_column2 = st.sidebar.selectbox("Select the second column for Z test:", data.columns)
 
@@ -748,6 +751,8 @@ def process_data(data):
         display_z_test_results(z_stat, p_value, z_test_result)
     # Interface for T test
     st.markdown("<p class='subheader'>T Test (Statistical Hypothesis Testing)</p>", unsafe_allow_html=True)
+
+    st.sidebar.title("T Test")
     selected_column1_t = st.sidebar.selectbox("Select the first column for T test:", data.columns)
     selected_column2_t = st.sidebar.selectbox("Select the second column for T test:", data.columns)
 
@@ -756,6 +761,8 @@ def process_data(data):
         display_t_test_results(t_stat, p_value)
     # Interface for Chi-square test
     st.markdown("<p class='subheader'>Chi-square Test (Statistical Hypothesis Testing)</p>", unsafe_allow_html=True)
+
+    st.sidebar.title("Chi-2 Test")
     selected_column1_chi2 = st.sidebar.selectbox("Select the first column for Chi-square test:", data.columns)
     selected_column2_chi2 = st.sidebar.selectbox("Select the second column for Chi-square test:", data.columns)
 
@@ -765,6 +772,7 @@ def process_data(data):
     # Interface for Linear Regression
     st.markdown("<p class='subheader'>Linear Regression</p>", unsafe_allow_html=True)
 
+    st.sidebar.title("Linear Regression")
     selected_x_column_lr = st.sidebar.selectbox("Select the independent variable (X) for Linear Regression:", data.columns)
     selected_y_column_lr = st.sidebar.selectbox("Select the dependent variable (Y) for Linear Regression:", data.columns)
 
@@ -774,6 +782,7 @@ def process_data(data):
     # Interface for sentiment analysis
     st.markdown("<p class='subheader'>Sentiment Analysis</p>", unsafe_allow_html=True)
 
+    st.sidebar.title("Sentiment Analysis")
     # Select the column containing text data for sentiment analysis
     text_column_for_sentiment = st.sidebar.selectbox("Select the column for sentiment analysis:", data.select_dtypes(include='object').columns)
 
