@@ -14,7 +14,9 @@ from scipy.stats import ttest_ind
 from scipy.stats import chi2_contingency
 import numpy as np
 from scipy.stats import gaussian_kde
-
+import streamlit.components.v1 as com
+from streamlit_option_menu import option_menu
+from streamlit_lottie import st_lottie
 # Dictionary mapping visualization types to numerical identifiers
 visualization_types = {
     "Line Plot": 1,
@@ -29,6 +31,8 @@ visualization_types = {
     "Violin Plot": 10,
     "Pair Plot": 11,
 }
+
+
 
 def detect_distribution_type(column):
     # Check for normal distribution based on skewness and kurtosis
@@ -532,20 +536,26 @@ def display_z_test_results(z_stat, p_value, z_test_result, significance_level=0.
 
 # Interface Streamlit
 def main():
+#################################################################
+    with open("style.css") as source:
+        design = source.read()
+    
+    # Appliquer le CSS à tous les composants
+    st.markdown(f"<style>{design}</style>", unsafe_allow_html=True)
+    st.markdown("<h2 class='heading'>PROJET ANALYSE.</h2>", unsafe_allow_html=True)
+    with st.sidebar:
+        selected = option_menu(
+            menu_title = "MENU",
+            options = ["Acceuil","Fichier","Lien"]
+        )
+    if selected=="Acceuil":
+        st.markdown(f"<style>{design}</style>", unsafe_allow_html=True)
+        st.markdown("<p class='subheader'>Souhaitez vous analyser vos données? veuillez choisir une source de donnée svp!.</p>", unsafe_allow_html=True)
+    elif selected=="Fichier":
+        st.title(f"Veuillez ajouter le  {selected}")
+        file_type = st.sidebar.selectbox("Sélectionnez le type de fichier :", ['CSV', 'XLSX', 'TXT'])
 
-    st.markdown('<link rel="stylesheet" type="text/css" href="styles.css">', unsafe_allow_html=True)
-
-
-    st.title('Projet d\'analyse de données')
-
-    # Choix de la source de données (Téléchargement ou Lien)
-    data_source = st.radio("Source de données :", ('Téléchargement', 'Lien'))
-
-    if data_source == 'Téléchargement':
-        # Sélection du type de fichier (CSV, XLSX, ou TXT)
-        file_type = st.selectbox("Sélectionnez le type de fichier :", ['CSV', 'XLSX', 'TXT'])
-
-        # Téléchargement du fichier
+        # Fichier du fichier
         uploaded_file = st.file_uploader(f"Téléchargez un fichier {file_type}", type=[file_type.lower()])
 
         # Charger les données du fichier si disponible
@@ -555,7 +565,7 @@ def main():
                     data = pd.read_csv(uploaded_file)
                 elif file_type == 'XLSX':
                     # Sélection de la feuille
-                    sheet_selector = st.selectbox("Choisir la feuille", pd.ExcelFile(uploaded_file).sheet_names)  
+                    sheet_selector = st.sidebar.selectbox("Choisir la feuille", pd.ExcelFile(uploaded_file).sheet_names)  
                     print(sheet_selector)
                     data = pd.read_excel(uploaded_file, sheet_name=sheet_selector)
                 elif file_type == 'TXT':
@@ -565,9 +575,8 @@ def main():
 
             except Exception as e:
                 st.error(f"Erreur lors du chargement du fichier : {e}")
-
-
-    elif data_source == 'Lien':
+    elif selected=="Lien":
+        st.markdown(f"Veuillez ajouter le  {selected}")
         # Saisie du lien vers les données
         data_url = st.text_input("Entrez le lien vers les données (CSV) :", "")
 
@@ -584,7 +593,7 @@ def main():
 
                         # Display statistical measures under each table
                         st.subheader("Mesure Statistique")
-                        selected_statistic = st.radio(f"Sélectionnez la mesure statistique (Table {i + 1}):", ('mean', 'median', 'std', 'min', 'max'), key=f"statistic_{i}")
+                        selected_statistic = st.sidebar.radio(f"Sélectionnez la mesure statistique (Table {i + 1}):", ('mean', 'median', 'std', 'min', 'max'), key=f"statistic_{i}")
 
                         for col in wiki_df.columns:
                             st.write(f"### Column: {col}")
@@ -604,8 +613,8 @@ def main():
                         st.subheader("Visualisation")
 
                         # Updated visualization code
-                        selected_visualization_type = st.selectbox(f"Select the visualization type (Table {i + 1}):", list(visualization_types.keys()))
-                        selected_columns = st.multiselect(f"Select columns for visualization (Table {i + 1}):", wiki_df.columns)
+                        selected_visualization_type = st.sidebar.selectbox(f"Select the visualization type (Table {i + 1}):", list(visualization_types.keys()))
+                        selected_columns = st.sidebar.multiselect(f"Select columns for visualization (Table {i + 1}):", wiki_df.columns)
 
                         # Check if the visualization type is not empty
                         if selected_visualization_type:
@@ -618,8 +627,8 @@ def main():
 
 def process_data(data):
     # Sélection des colonnes et lignes
-    selected_columns = st.multiselect("Sélectionnez les colonnes :", data.columns)
-    selected_rows = st.multiselect("Sélectionnez les lignes :", data.index)
+    selected_columns = st.sidebar.multiselect("Sélectionnez les colonnes :", data.columns)
+    selected_rows = st.sidebar.multiselect("Sélectionnez les lignes :", data.index)
 
     # Vérifier si les listes de colonnes et de lignes sont vides
     if not selected_columns:
@@ -633,13 +642,14 @@ def process_data(data):
     st.write(result_data)
 
     # Ajouter la fonction describe()
-    st.subheader("Mesure Statistique")
-    selected_statistic = st.radio("Sélectionnez la mesure statistique :", ('All', 'mean', 'median', 'std', 'min', 'max'))
+    st.markdown("<p class='subheader'>Mesure Statistique</p>", unsafe_allow_html=True)
+
+    selected_statistic = st.sidebar.radio("Sélectionnez la mesure statistique :", ('All', 'mean', 'median', 'std', 'min', 'max'))
 
     # Sélecteur de colonnes pour les mesures statistiques
-    selected_statistic_column = st.selectbox("Sélectionnez la colonne :", data.columns)
+    selected_statistic_column = st.sidebar.selectbox("Sélectionnez la colonne :", data.columns)
 
-    if st.button("Afficher la mesure statistique"):
+    if st.sidebar.button("Afficher la mesure statistique"):
         if selected_statistic == 'All':
             result = data[selected_statistic_column].describe()
             result = result.round(2)  # Arrondir à deux chiffres après la virgule
@@ -650,19 +660,19 @@ def process_data(data):
             st.write(result)
 
     # Sélection du type de graphique
-    selected_chart_type = st.selectbox("Sélectionnez le type de graphique :", ['nuage des points', 'droite de reg', 'bar', 'histogram', 'heatmap', 'courbe'])
+    selected_chart_type = st.sidebar.selectbox("Sélectionnez le type de graphique :", ['nuage des points', 'droite de reg', 'bar', 'histogram', 'heatmap', 'courbe'])
 
     # Saisie des colonnes pour le graphique choisi
     if selected_chart_type == 'heatmap':
-         selected_x_columns = st.multiselect("Sélectionnez les colonnes pour l'axe X :", data.columns, key="selected_x_columns")
+         selected_x_columns = st.sidebar.multiselect("Sélectionnez les colonnes pour l'axe X :", data.columns, key="selected_x_columns")
     elif selected_chart_type not in ['histogram', 'bar', 'courbe']:
-        selected_x_column = st.selectbox("Saisissez la colonne X :", data.columns)
-        selected_y_column = st.selectbox("Saisissez la colonne Y :", data.columns)
+        selected_x_column = st.sidebar.selectbox("Saisissez la colonne X :", data.columns)
+        selected_y_column = st.sidebar.selectbox("Saisissez la colonne Y :", data.columns)
     else:
-        selected_x_column = selected_y_column = st.selectbox("Saisissez la colonne de l'axe X :", data.columns)
+        selected_x_column = selected_y_column = st.sidebar.selectbox("Saisissez la colonne de l'axe X :", data.columns)
 
     # Bouton pour afficher le graphique
-    if st.button("Afficher le graphique"):
+    if st.sidebar.button("Afficher le graphique"):
         try:
             if selected_chart_type == 'nuage des points':
                 fig, ax = plt.subplots()
@@ -702,53 +712,53 @@ def process_data(data):
              if "zero-size array to reduction operation fmin which has no identity" in str(e):
                  st.write("Erreur : La matrice de corrélation est de taille zéro. Veuillez vérifier vos données.")
     # Interface for Z test
-    st.subheader("Z Test (Statistical Hypothesis Testing)")
+    st.markdown("<p class='subheader'>Z Test (Statistical Hypothesis Testing).</p>", unsafe_allow_html=True)
+ 
 
-    selected_column1 = st.selectbox("Select the first column for Z test:", data.columns)
-    selected_column2 = st.selectbox("Select the second column for Z test:", data.columns)
+    selected_column1 = st.sidebar.selectbox("Select the first column for Z test:", data.columns)
+    selected_column2 = st.sidebar.selectbox("Select the second column for Z test:", data.columns)
 
-    if st.button("Perform Z Test"):
+    if st.sidebar.button("Perform Z Test"):
         z_stat, p_value, z_test_result = perform_z_test(data, selected_column1, selected_column2)
         display_z_test_results(z_stat, p_value, z_test_result)
     # Interface for T test
-    st.subheader("T Test (Statistical Hypothesis Testing)")
+    st.markdown("<p class='subheader'>T Test (Statistical Hypothesis Testing)</p>", unsafe_allow_html=True)
+    selected_column1_t = st.sidebar.selectbox("Select the first column for T test:", data.columns)
+    selected_column2_t = st.sidebar.selectbox("Select the second column for T test:", data.columns)
 
-    selected_column1_t = st.selectbox("Select the first column for T test:", data.columns)
-    selected_column2_t = st.selectbox("Select the second column for T test:", data.columns)
-
-    if st.button("Perform T Test"):
+    if st.sidebar.button("Perform T Test"):
         t_stat, p_value = perform_t_test(data, selected_column1_t, selected_column2_t)
         display_t_test_results(t_stat, p_value)
     # Interface for Chi-square test
-    st.subheader("Chi-square Test (Statistical Hypothesis Testing)")
+    st.markdown("<p class='subheader'>Chi-square Test (Statistical Hypothesis Testing)</p>", unsafe_allow_html=True)
+    selected_column1_chi2 = st.sidebar.selectbox("Select the first column for Chi-square test:", data.columns)
+    selected_column2_chi2 = st.sidebar.selectbox("Select the second column for Chi-square test:", data.columns)
 
-    selected_column1_chi2 = st.selectbox("Select the first column for Chi-square test:", data.columns)
-    selected_column2_chi2 = st.selectbox("Select the second column for Chi-square test:", data.columns)
-
-    if st.button("Perform Chi-square Test"):
+    if st.sidebar.button("Perform Chi-square Test"):
         chi2_stat, p_value_chi2 = perform_chi2_test(data, selected_column1_chi2, selected_column2_chi2)
         display_chi2_test_results(chi2_stat, p_value_chi2)
     # Interface for Linear Regression
-    st.subheader("Linear Regression")
+    st.markdown("<p class='subheader'>Linear Regression</p>", unsafe_allow_html=True)
 
-    selected_x_column_lr = st.selectbox("Select the independent variable (X) for Linear Regression:", data.columns)
-    selected_y_column_lr = st.selectbox("Select the dependent variable (Y) for Linear Regression:", data.columns)
+    selected_x_column_lr = st.sidebar.selectbox("Select the independent variable (X) for Linear Regression:", data.columns)
+    selected_y_column_lr = st.sidebar.selectbox("Select the dependent variable (Y) for Linear Regression:", data.columns)
 
-    if st.button("Perform Linear Regression"):
+    if st.sidebar.button("Perform Linear Regression"):
         slope_lr, intercept_lr = perform_linear_regression(data, selected_x_column_lr, selected_y_column_lr)
         display_linear_regression_results(data, slope_lr, intercept_lr, selected_x_column_lr, selected_y_column_lr)
     # Interface for sentiment analysis
-    st.subheader("Sentiment Analysis")
+    st.markdown("<p class='subheader'>Sentiment Analysis</p>", unsafe_allow_html=True)
 
     # Select the column containing text data for sentiment analysis
-    text_column_for_sentiment = st.selectbox("Select the column for sentiment analysis:", data.select_dtypes(include='object').columns)
+    text_column_for_sentiment = st.sidebar.selectbox("Select the column for sentiment analysis:", data.select_dtypes(include='object').columns)
 
     # Button to perform fine-grained sentiment analysis and add a new "Feedback" column
-    if st.button("Perform Fine-Grained Sentiment Analysis"):
+    if st.sidebar.button("Perform Fine-Grained Sentiment Analysis"):
         data = perform_fine_grained_sentiment_analysis(data, text_column_for_sentiment)
         st.write("Data with Fine-Grained Sentiment Analysis:")
         st.write(data)
 
 
 if __name__ == '__main__':
+
     main()
