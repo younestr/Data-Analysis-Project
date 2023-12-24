@@ -794,13 +794,14 @@ def process_data(data):
     
     
     # Interface for ANOVA test
-    st.subheader("ANOVA Test (Analysis of Variance)")
+    st.markdown("<p class='subheader'>ANOVA Test (Analysis of Variance)</p>", unsafe_allow_html=True)
 
-    selected_group_column = st.selectbox("Select the column for grouping:", data.columns)
-    selected_values_column_anova = st.selectbox("Select the column for ANOVA test:", data.columns)
+    st.sidebar.title("ANOVA Test")
+    selected_group_column_anova = st.sidebar.selectbox("Select the column for grouping:", data.columns)
+    selected_values_column_anova = st.sidebar.selectbox("Select the column for ANOVA test:", data.columns)
 
-    if st.button("Perform ANOVA Test"):
-        f_stat_anova, p_value_anova = perform_anova_test(data, selected_group_column, selected_values_column_anova)
+    if st.sidebar.button("Perform ANOVA Test"):
+        f_stat_anova, p_value_anova = perform_anova_test(data, selected_group_column_anova, selected_values_column_anova)
         display_anova_test_results(f_stat_anova, p_value_anova)
 
 if __name__ == '__main__':
